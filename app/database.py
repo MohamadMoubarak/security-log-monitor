@@ -53,4 +53,16 @@ def save_alerts(alerts):
             "INSERT INTO alerts (ip, failures, first_seen, last_seen) VALUES (?, ?, ?, ?)",
             rows,
         )
-        
+
+
+def fetch_all(sql):
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(sql).fetchall()
+    return [dict(row) for row in rows]
+
+def get_events():
+    return fetch_all("SELECT * FROM events ORDER BY id")
+
+def get_alerts():
+    return fetch_all("SELECT * FROM alerts ORDER BY id")
