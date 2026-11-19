@@ -27,5 +27,7 @@ def read_events(path):
                 events.append(event)
     return events
 
-for event in read_events("samples/auth.log"):
-    print(event)
+if __name__ == "__main__":
+    for event in read_events("samples/auth.log"):
+        print(event)
+
