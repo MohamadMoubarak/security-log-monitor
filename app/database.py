@@ -55,10 +55,10 @@ def save_alerts(alerts):
         )
 
 
-def fetch_all(sql):
+def fetch_all(sql, params=()):
     with get_connection() as conn:
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(sql).fetchall()
+        rows = conn.execute(sql, params).fetchall()
     return [dict(row) for row in rows]
 
 def get_events():
@@ -66,3 +66,10 @@ def get_events():
 
 def get_alerts():
     return fetch_all("SELECT * FROM alerts ORDER BY id")
+
+def get_events_by_status(status: str | None = None):
+    
+    if status is not None:
+            return fetch_all("SELECT * FROM events WHERE status = ? ORDER BY id", (status,))
+    return fetch_all("SELECT * FROM events ORDER BY id")
+
