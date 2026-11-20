@@ -26,6 +26,13 @@ def create_tables():
                 last_seen TEXT NOT NULL
                 )
             """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL
+            )
+        """)
 
 def clear_tables():
     with get_connection() as conn:
@@ -73,3 +80,13 @@ def get_events_by_status(status: str | None = None):
             return fetch_all("SELECT * FROM events WHERE status = ? ORDER BY id", (status,))
     return fetch_all("SELECT * FROM events ORDER BY id")
 
+def save_user(username, hashed_password):
+    with get_connection() as conn:
+        conn.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            (username, hashed_password),
+        )
+
+def get_user(username):
+    rows = fetch_all("SELECT * FROM users WHERE username = ?", (username,))
+    return rows[0] if rows else None
