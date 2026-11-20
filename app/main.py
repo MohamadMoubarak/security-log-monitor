@@ -1,3 +1,4 @@
+from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 
 import jwt
@@ -9,6 +10,7 @@ from app.security import create_token, read_token, verify_password
 
 app = FastAPI(title="Security Log Monitor")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+app.mount("/dashboard", StaticFiles(directory="static", html=True), name="dashboard")
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
