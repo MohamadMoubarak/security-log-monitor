@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+from app.setup import setup
+
 from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 
@@ -8,7 +11,13 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.database import get_alerts, get_events_by_status, get_user, get_alerts_By_IP
 from app.security import create_token, read_token, verify_password
 
-app = FastAPI(title="Security Log Monitor")
+@asynccontextmanager
+async def lifespan(app):
+    setup()
+    yield
+
+
+app = FastAPI(title="Security Log Monitor", lifespan=lifespan)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 app.mount("/dashboard", StaticFiles(directory="static", html=True), name="dashboard")
 
