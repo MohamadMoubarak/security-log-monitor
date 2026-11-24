@@ -13,6 +13,7 @@ A small security monitoring web app. It reads SSH login logs, detects brute-forc
 - REST API built with FastAPI, with automatic documentation at `/docs`
 - Login with Argon2-hashed passwords and JWT tokens
 - Web dashboard with alert counters, a chart of failed logins per IP, and event tables
+- Runs with Docker Compose; data is kept in a Docker volume
 
 ## How it works
 
@@ -21,44 +22,57 @@ auth.log --> parser --> detection --> SQLite database --> FastAPI REST API --> d
             (regex)    (sliding window)                  (JWT protected)     (HTML/JS/Chart.js)
 ```
 
+On startup, the app creates the database tables, creates the admin account from the settings, and loads the sample log if the database is empty.
+
 ## Security choices
 
 - **Passwords are never stored**, only Argon2 hashes with a random salt.
-- **JWT tokens** expire after 30 minutes; the signing key is kept in a `.env` file that is not committed.
+- **JWT tokens** expire after 30 minutes; the signing key is kept in a `.env` file that is never committed or built into the image.
 - **SQL injection protection:** every query uses parameterized placeholders (`?`).
 - **XSS protection:** log data (attacker-controlled usernames) is inserted with `textContent`, never `innerHTML`.
 - The login error message does not reveal whether a username exists.
 
 ## Tech stack
 
-Python · FastAPI · Uvicorn · SQLite · PyJWT · pwdlib (Argon2) · HTML · CSS · JavaScript · Chart.js
+Python · FastAPI · Uvicorn · SQLite · PyJWT · pwdlib (Argon2) · HTML · CSS · JavaScript · Chart.js · Docker · Docker Compose
 
-## Run it locally
+## Settings
+
+Copy `.env.example` to `.env` and fill in the values:
+
+```
+SECRET_KEY=<random key>
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=<your password>
+```
+
+Generate a secret key with:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+## Run with Docker (recommended)
 
 ```bash
 git clone https://github.com/MohamadMoubarak/security-log-monitor.git
 cd security-log-monitor
+cp .env.example .env        # then edit .env
+docker compose up -d --build
+```
+
+Open http://localhost:8000/dashboard/ and log in with the admin account from `.env`.
+
+Stop it with `docker compose down`. The data stays in the `monitor-data` volume; `docker compose down -v` also deletes it.
+
+## Run without Docker
+
+```bash
 python -m venv .venv
 .venv\Scripts\Activate.ps1          # on Linux/macOS: source .venv/bin/activate
 python -m pip install -r requirements.txt
-```
-
-Create a `.env` file with a secret key:
-
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-# then put this line in .env:  SECRET_KEY=<the generated key>
-```
-
-Create a user, load the sample log, and start the server:
-
-```bash
-python -m app.create_user
-python -m app.ingest
 python -m uvicorn app.main:app --reload
 ```
-
-Open http://127.0.0.1:8000/dashboard/ and log in.
 
 ## Screenshots
 
@@ -74,15 +88,13 @@ app/
   detection.py     # brute-force detection rule
   database.py      # SQLite tables and queries
   security.py      # password hashing and JWT tokens
+  setup.py         # first-run setup: tables, admin user, sample data
   main.py          # FastAPI routes
-  ingest.py        # runs parser + detection and saves results
-  create_user.py   # creates a login account
+  ingest.py        # reloads the sample log by hand
+  create_user.py   # creates an extra login account
 static/            # dashboard (HTML, CSS, JavaScript)
 samples/auth.log   # sample log with a simulated attack
+Dockerfile         # builds the app image
+docker-compose.yml # runs the app with its settings and volume
+.env.example       # settings template
 ```
-
-## Next steps
-
-- Run with Docker
-- Automated tests with pytest
-- Analyze real logs from a Linux server
