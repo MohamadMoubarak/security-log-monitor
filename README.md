@@ -78,7 +78,7 @@ python -m uvicorn app.main:app --reload
 
 | Login | API documentation |
 |---|---|
-| ![Login](docs/screenshots/login.jpg) | ![API docs](docs/screenshots/api-docs.jpg) |
+| ![Login](docs/screenshots/login.jpg) | ![API docs](docs/screenshots/api_docs.jpg) |
 
 ## Project structure
 
