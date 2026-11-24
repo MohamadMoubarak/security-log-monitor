@@ -90,3 +90,7 @@ def save_user(username, hashed_password):
 def get_user(username):
     rows = fetch_all("SELECT * FROM users WHERE username = ?", (username,))
     return rows[0] if rows else None
+
+def get_alerts_By_IP(ip):
+    rows = fetch_all("SELECT * FROM alerts WHERE ip = ?", (ip,))
+    return rows

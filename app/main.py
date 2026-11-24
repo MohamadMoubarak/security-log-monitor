@@ -5,7 +5,7 @@ import jwt
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from app.database import get_alerts, get_events_by_status, get_user
+from app.database import get_alerts, get_events_by_status, get_user, get_alerts_By_IP
 from app.security import create_token, read_token, verify_password
 
 app = FastAPI(title="Security Log Monitor")
@@ -40,7 +40,12 @@ def list_events_by_status(
 ):
     return get_events_by_status(status)
 
-@app.get("/alerts")
-def list_alerts(user: Annotated[dict, Depends(get_current_user)]):
-    return get_alerts()
+# @app.get("/alerts")
+# def list_alerts(user: Annotated[dict, Depends(get_current_user)]):
+#     return get_alerts()
 
+@app.get("/alerts")
+def filter_alerts_By_IP(user: Annotated[dict, Depends(get_current_user)], ip : str | None = None,):
+    if ip is not None:
+        return get_alerts_By_IP(ip)
+    return get_alerts()
